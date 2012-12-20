@@ -62,6 +62,10 @@ main()
 
 Callback_StartGameType()
 {
+	thread maps\mp\gametypes\dispatcher::onStartGameType(); // 123123231
+	maps\mp\_load::main();
+	
+	
 	level.splitscreen = isSplitScreen();
 
 	// defaults if not defined in level script
@@ -105,6 +109,7 @@ Callback_StartGameType()
 
 	setClientNameMode("auto_change");
 
+	// 123123231
 	spawnpointname = "mp_ctf_spawn_allied";
 	spawnpoints = getentarray(spawnpointname, "classname");
 
@@ -162,7 +167,7 @@ Callback_StartGameType()
 
 	thread startGame();
 	thread updateGametypeCvars();
-	//thread maps\mp\gametypes\_teams::addTestClients();
+	thread maps\mp\gametypes\_teams::addTestClients();
 	
 	thread mapLogic(); // 123123231
 }
@@ -175,7 +180,7 @@ mapLogic()
 	std\io::print("NOTICE: found teleports: " + teleporters.size + "\n");
 	
 	pushers = getEntArray("trigger_push", "targetname");
-	for (i=0; i<teleporters.size; i++)
+	for (i=0; i<pushers.size; i++)
 		pushers[i] thread pusher();
 	std\io::print("NOTICE: found pushers: " + pushers.size + "\n");
 }
@@ -202,19 +207,47 @@ pusher()
 		
 		if ( ! isDefined(player.lastPush))
 			player.lastPush = 0;
-		if (getTime() - player.lastPush < 150)
-			continue;
+		//if (getTime() - player.lastPush < 150)
+		//	continue;
+		wait 0.05;
 		
 		//player iprintlnbold("Push! lastPush=", getTime() - player.lastPush);
-		player iprintlnbold("Push! Speed=", speed);
 		cur = player std\player::getVelocity();
-		player std\player::setVelocity(cur + addVelocity);
-		player.lastPush = getTime();
+		
+		//if (length(cur) < length(addVelocity))
+		{
+			/*
+			delta = length(addVelocity) - length(cur);
+			
+			scale = length(cur) / length(addVelocity);
+			addVelocity = std\math::vectorScale(addVelocity, scale);
+			*/
+			
+			//player iprintlnbold("Push! Speed=", speed, " Add=",addVelocity - cur);
+			
+			add = (0,0,0);
+			/*
+			if (player std\player::forwardButtonPressed())
+			{
+				add = anglesToForward(player.angles);
+				add = std\math::vectorScale(add, getcvarint("scale"));
+				player iprintlnbold(add);
+			}*/
+			//player iprintlnbold(cur, addVelocity - cur);
+			player std\player::addVelocity((addVelocity - cur) + add);
+			player.lastPush = getTime();
+		}
 	}
 }
 teleporter()
 {
 	trigger = self;
+	
+	if (!isDefined(trigger.target))
+	{
+		std\io::print("WARNING: teleporter without target!\n");
+		return;
+	}
 	
 	targets = getEntArray(trigger.target, "targetname");
 	std\io::print("NOTICE: found targets: " + targets.size + "\n");
@@ -352,9 +385,15 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(self.sessionteam == "spectator")
 		return;
 
-	// 123123231
-	if (sMeansOfDeath == "MOD_FALLING" && iDamage>20)
+	if (sMeansOfDeath == "MOD_FALLING" && iDamage>20) // 123123231
 		iDamage = 20;
+		
+		
+	if (isDefined(self.spawnTime) && getTime() - self.spawnTime < 3000)
+	{
+		eAttacker iprintlnbold("^5Spawn^7-^5Protection^6!");
+		return;
+	}
 		
 	// Don't do knockback if the damage direction was not specified
 	if(!isDefined(vDir))
@@ -541,6 +580,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 			else
 			{
 				attacker.score++;
+				attacker std\stats::add("xp", 10); // 123123231
 				teamscore = getTeamScore(attacker.pers["team"]);
 				teamscore++;
 				setTeamScore(attacker.pers["team"], teamscore);
@@ -595,6 +635,9 @@ spawnPlayer()
 	self notify("spawned");
 	self notify("end_respawn");
 
+	// 123123231
+	self.spawnTime = getTime();
+	
 	resettimeout();
 
 	// Stop shellshock and rumble
@@ -611,6 +654,7 @@ spawnPlayer()
 	self.health = self.maxhealth;
 	self.friendlydamage = undefined;
 
+	// 123123231
 	if(self.pers["team"] == "allies")
 		spawnpointname = "mp_ctf_spawn_allied";
 	else
