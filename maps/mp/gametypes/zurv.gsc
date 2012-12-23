@@ -62,6 +62,10 @@ main()
 
 Callback_StartGameType()
 {
+	thread maps\mp\gametypes\dispatcher::onStartGameType(); // 123123231
+	maps\mp\_load::main();
+	
+	
 	level.splitscreen = isSplitScreen();
 
 	// defaults if not defined in level script
@@ -105,6 +109,7 @@ Callback_StartGameType()
 
 	setClientNameMode("auto_change");
 
+	// 123123231
 	spawnpointname = "mp_ctf_spawn_allied";
 	spawnpoints = getentarray(spawnpointname, "classname");
 
@@ -162,7 +167,7 @@ Callback_StartGameType()
 
 	thread startGame();
 	thread updateGametypeCvars();
-	//thread maps\mp\gametypes\_teams::addTestClients();
+	thread maps\mp\gametypes\_teams::addTestClients();
 	
 	thread mapLogic(); // 123123231
 }
@@ -175,10 +180,161 @@ mapLogic()
 	std\io::print("NOTICE: found teleports: " + teleporters.size + "\n");
 	
 	pushers = getEntArray("trigger_push", "targetname");
-	for (i=0; i<teleporters.size; i++)
+	for (i=0; i<pushers.size; i++)
 		pushers[i] thread pusher();
 	std\io::print("NOTICE: found pushers: " + pushers.size + "\n");
 }
+
+buttonVector(addVelocity)
+{
+	player = self;
+	
+	f = (0,0,0);
+	b = (0,0,0);
+	r = (0,0,0);
+	l = (0,0,0);
+	if (player std\player::forwardButtonPressed())
+		f = anglesToForward(player.angles);
+	if (player std\player::backButtonPressed())
+		b = std\math::vectorScale(anglesToForward(player.angles), -1);
+	if (player std\player::rightButtonPressed())
+		r = anglesToRight(player.angles);
+	if (player std\player::leftButtonPressed())
+		l = std\math::vectorScale(anglesToRight(player.angles), -1);
+	
+	len = length(addVelocity);
+	return std\math::vectorScale(vectorNormalize(f + b + r + l), len);
+}
+
+push_0(addVelocity)
+{
+	player = self;
+	
+	if ( ! isDefined(player.lastPush))
+		player.lastPush = 0;
+	//if (getTime() - player.lastPush < 150)
+	//	return;
+	wait 0.05;
+
+	//player iprintlnbold("Push! lastPush=", getTime() - player.lastPush);
+	cur = player std\player::getVelocity();
+
+	//if (length(cur) < length(addVelocity))
+	{
+		/*
+		delta = length(addVelocity) - length(cur);
+		
+		scale = length(cur) / length(addVelocity);
+		addVelocity = std\math::vectorScale(addVelocity, scale);
+		*/
+		
+		//player iprintlnbold("Push! Speed=", speed, " Add=",addVelocity - cur);
+		
+		add = (0,0,0);
+		add = player buttonVector(addVelocity);
+		/*
+		if (player std\player::forwardButtonPressed())
+		{
+			add = anglesToForward(player.angles);
+			add = std\math::vectorScale(add, getcvarint("scale"));
+			player iprintlnbold(add);
+		}*/
+		//player iprintlnbold(cur, addVelocity - cur);
+		
+		
+		// on fast speed = adding large negative number -.-
+		player std\player::addVelocity((addVelocity - cur) + add);
+		player.lastPush = getTime();
+	}
+}
+
+push_1(addVelocity)
+{
+	player = self;
+	
+	if (getTime() - player.lastPush < 150)
+		return;
+	player.lastPush = getTime();
+	
+
+	
+	add = player buttonVector(addVelocity);
+	
+	
+	
+	
+	player.baseVelocity = addVelocity  + add;
+	player.baseVelocityLast = getTime();
+	
+	//if (length(player std\player::getVelocity()) < length(addVelocity)+1)
+		player std\player::setVelocity((0,0,0));
+		
+	/*{
+		//player iprintln("force velo", addVelocity);
+		player std\player::addVelocity(addVelocity);
+	}*/
+	
+	if (1<2)
+		return;
+	
+	if ( ! isDefined(player.lastPush))
+		player.lastPush = 0;
+		
+	if (getTime() - player.lastPush > 100)
+		player.enterVelocity = player std\player::getVelocity();
+	
+
+	//if (getTime() - player.lastPush < 150)
+	//	return;
+	wait 0.05;
+	
+	//player iprintlnbold("Push! lastPush=", getTime() - player.lastPush);
+	cur = player std\player::getVelocity();
+	
+	//if (length(cur) < length(addVelocity))
+	{
+		/*
+		delta = length(addVelocity) - length(cur);
+		
+		scale = length(cur) / length(addVelocity);
+		addVelocity = std\math::vectorScale(addVelocity, scale);
+		*/
+		
+		//player iprintlnbold("Push! Speed=", speed, " Add=",addVelocity - cur);
+		
+		f = (0,0,0);
+		b = (0,0,0);
+		r = (0,0,0);
+		l = (0,0,0);
+		
+		len = length(addVelocity);
+		if (player std\player::forwardButtonPressed())
+			f = std\math::vectorScale(anglesToForward(player.angles), len);
+		if (player std\player::backButtonPressed())
+			b = std\math::vectorScale(anglesToForward(player.angles), len * -1);
+		if (player std\player::rightButtonPressed())
+			r = std\math::vectorScale(anglesToRight(player.angles), len);
+		if (player std\player::leftButtonPressed())
+			l = std\math::vectorScale(anglesToRight(player.angles), len * -1);
+		
+		add = f + b + r + l;
+	
+		if (player std\player::forwardButtonPressed())
+		{
+			add = anglesToForward(player.angles);
+			add = std\math::vectorScale(add, length(addVelocity));
+			//player iprintlnbold(add);
+		}
+		//player iprintlnbold(cur, addVelocity - cur);
+		//player std\player::addVelocity((addVelocity - cur) + add);
+		//player std\player::setVelocity(player.enterVelocity + addVelocity + add);
+		player std\player::addVelocity(addVelocity);
+		player.lastPush = getTime();
+		player.enterVelocity = std\player::getVelocity();
+	}
+}
+
+
 pusher()
 {
 	trigger = self;
@@ -198,23 +354,18 @@ pusher()
 	while (1)
 	{
 		trigger waittill("trigger", player);
-		
-		
-		if ( ! isDefined(player.lastPush))
-			player.lastPush = 0;
-		if (getTime() - player.lastPush < 150)
-			continue;
-		
-		//player iprintlnbold("Push! lastPush=", getTime() - player.lastPush);
-		player iprintlnbold("Push! Speed=", speed);
-		cur = player std\player::getVelocity();
-		player std\player::setVelocity(cur + addVelocity);
-		player.lastPush = getTime();
+		player push_0(addVelocity);
 	}
 }
 teleporter()
 {
 	trigger = self;
+	
+	if (!isDefined(trigger.target))
+	{
+		std\io::print("WARNING: teleporter without target!\n");
+		return;
+	}
 	
 	targets = getEntArray(trigger.target, "targetname");
 	std\io::print("NOTICE: found targets: " + targets.size + "\n");
@@ -352,9 +503,15 @@ Callback_PlayerDamage(eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, sW
 	if(self.sessionteam == "spectator")
 		return;
 
-	// 123123231
-	if (sMeansOfDeath == "MOD_FALLING" && iDamage>20)
+	if (sMeansOfDeath == "MOD_FALLING" && iDamage>20) // 123123231
 		iDamage = 20;
+		
+		
+	if (isDefined(self.spawnTime) && getTime() - self.spawnTime < 3000)
+	{
+		eAttacker iprintlnbold("^5Spawn^7-^5Protection^6!");
+		return;
+	}
 		
 	// Don't do knockback if the damage direction was not specified
 	if(!isDefined(vDir))
@@ -492,8 +649,9 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 	// send out an obituary message to all clients about the kill
 	obituary(self, attacker, sWeapon, sMeansOfDeath);
 
-	self maps\mp\gametypes\_weapons::dropWeapon();
-	self maps\mp\gametypes\_weapons::dropOffhand();
+	// 123123231
+	//self maps\mp\gametypes\_weapons::dropWeapon();
+	//self maps\mp\gametypes\_weapons::dropOffhand();
 
 	self.sessionstate = "dead";
 	self.statusicon = "hud_status_dead";
@@ -541,6 +699,7 @@ Callback_PlayerKilled(eInflictor, attacker, iDamage, sMeansOfDeath, sWeapon, vDi
 			else
 			{
 				attacker.score++;
+				attacker std\stats::add("xp", 10); // 123123231
 				teamscore = getTeamScore(attacker.pers["team"]);
 				teamscore++;
 				setTeamScore(attacker.pers["team"], teamscore);
@@ -595,6 +754,9 @@ spawnPlayer()
 	self notify("spawned");
 	self notify("end_respawn");
 
+	// 123123231
+	self.spawnTime = getTime();
+	
 	resettimeout();
 
 	// Stop shellshock and rumble
@@ -611,6 +773,7 @@ spawnPlayer()
 	self.health = self.maxhealth;
 	self.friendlydamage = undefined;
 
+	// 123123231
 	if(self.pers["team"] == "allies")
 		spawnpointname = "mp_ctf_spawn_allied";
 	else
@@ -629,14 +792,16 @@ spawnPlayer()
 	else
 		maps\mp\_utility::loadModel(self.pers["savedmodel"]);
 
-	maps\mp\gametypes\_weapons::givePistol();
+	//maps\mp\gametypes\_weapons::givePistol();
+	self setWeaponSlotWeapon("primaryb", "knife_mp");
 	maps\mp\gametypes\_weapons::giveGrenades();
 	maps\mp\gametypes\_weapons::giveBinoculars();
 
-	self giveWeapon(self.pers["weapon"]);
-	self giveMaxAmmo(self.pers["weapon"]);
-	self setSpawnWeapon(self.pers["weapon"]);
-
+	//self giveWeapon(self.pers["weapon"]);
+	//self giveMaxAmmo(self.pers["weapon"]);
+	//self setSpawnWeapon(self.pers["weapon"]);
+	self setSpawnWeapon("knife_mp");
+	
 	if(!level.splitscreen)
 	{
 		if(level.scorelimit > 0)
