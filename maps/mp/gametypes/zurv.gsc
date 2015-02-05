@@ -177,12 +177,12 @@ mapLogic()
 	teleporters = getEntArray("trigger_teleport", "targetname");
 	for (i=0; i<teleporters.size; i++)
 		teleporters[i] thread teleporter();
-	std\io::print("NOTICE: found teleports: " + teleporters.size + "\n");
+	printf("NOTICE: found teleports: " + teleporters.size + "\n");
 	
 	pushers = getEntArray("trigger_push", "targetname");
 	for (i=0; i<pushers.size; i++)
 		pushers[i] thread pusher();
-	std\io::print("NOTICE: found pushers: " + pushers.size + "\n");
+	printf("NOTICE: found pushers: " + pushers.size + "\n");
 }
 
 buttonVector(addVelocity)
@@ -193,13 +193,13 @@ buttonVector(addVelocity)
 	b = (0,0,0);
 	r = (0,0,0);
 	l = (0,0,0);
-	if (player std\player::forwardButtonPressed())
+	if (player forwardButtonPressed())
 		f = anglesToForward(player.angles);
-	if (player std\player::backButtonPressed())
+	if (player backButtonPressed())
 		b = std\math::vectorScale(anglesToForward(player.angles), -1);
-	if (player std\player::rightButtonPressed())
+	if (player rightButtonPressed())
 		r = anglesToRight(player.angles);
-	if (player std\player::leftButtonPressed())
+	if (player leftButtonPressed())
 		l = std\math::vectorScale(anglesToRight(player.angles), -1);
 	
 	len = length(addVelocity);
@@ -217,9 +217,9 @@ push_0(addVelocity)
 	wait 0.05;
 
 	//player iprintlnbold("Push! lastPush=", getTime() - player.lastPush);
-	cur = player std\player::getVelocity();
+	cur = player std\player::getVelocityBase();
 
-	//if (length(cur) < length(addVelocity))
+	if (length(cur) < length(addVelocity))
 	{
 		/*
 		delta = length(addVelocity) - length(cur);
@@ -233,7 +233,7 @@ push_0(addVelocity)
 		add = (0,0,0);
 		add = player buttonVector(addVelocity);
 		/*
-		if (player std\player::forwardButtonPressed())
+		if (player forwardButtonPressed())
 		{
 			add = anglesToForward(player.angles);
 			add = std\math::vectorScale(add, getcvarint("scale"));
@@ -243,7 +243,7 @@ push_0(addVelocity)
 		
 		
 		// on fast speed = adding large negative number -.-
-		player std\player::addVelocity((addVelocity - cur) + add);
+		player addVelocity((addVelocity - cur) + add);
 		player.lastPush = getTime();
 	}
 }
@@ -266,12 +266,12 @@ push_1(addVelocity)
 	player.baseVelocity = addVelocity  + add;
 	player.baseVelocityLast = getTime();
 	
-	//if (length(player std\player::getVelocity()) < length(addVelocity)+1)
-		player std\player::setVelocity((0,0,0));
+	//if (length(player getVelocity()) < length(addVelocity)+1)
+		player std\player::setVelocityBase((0,0,0));
 		
 	/*{
 		//player iprintln("force velo", addVelocity);
-		player std\player::addVelocity(addVelocity);
+		player addVelocity(addVelocity);
 	}*/
 	
 	if (1<2)
@@ -281,7 +281,7 @@ push_1(addVelocity)
 		player.lastPush = 0;
 		
 	if (getTime() - player.lastPush > 100)
-		player.enterVelocity = player std\player::getVelocity();
+		player.enterVelocity = player std\player::getVelocityBase();
 	
 
 	//if (getTime() - player.lastPush < 150)
@@ -289,7 +289,7 @@ push_1(addVelocity)
 	wait 0.05;
 	
 	//player iprintlnbold("Push! lastPush=", getTime() - player.lastPush);
-	cur = player std\player::getVelocity();
+	cur = player std\player::getVelocityBase();
 	
 	//if (length(cur) < length(addVelocity))
 	{
@@ -308,29 +308,29 @@ push_1(addVelocity)
 		l = (0,0,0);
 		
 		len = length(addVelocity);
-		if (player std\player::forwardButtonPressed())
+		if (player forwardButtonPressed())
 			f = std\math::vectorScale(anglesToForward(player.angles), len);
-		if (player std\player::backButtonPressed())
+		if (player backButtonPressed())
 			b = std\math::vectorScale(anglesToForward(player.angles), len * -1);
-		if (player std\player::rightButtonPressed())
+		if (player rightButtonPressed())
 			r = std\math::vectorScale(anglesToRight(player.angles), len);
-		if (player std\player::leftButtonPressed())
+		if (player leftButtonPressed())
 			l = std\math::vectorScale(anglesToRight(player.angles), len * -1);
 		
 		add = f + b + r + l;
 	
-		if (player std\player::forwardButtonPressed())
+		if (player forwardButtonPressed())
 		{
 			add = anglesToForward(player.angles);
 			add = std\math::vectorScale(add, length(addVelocity));
 			//player iprintlnbold(add);
 		}
 		//player iprintlnbold(cur, addVelocity - cur);
-		//player std\player::addVelocity((addVelocity - cur) + add);
-		//player std\player::setVelocity(player.enterVelocity + addVelocity + add);
-		player std\player::addVelocity(addVelocity);
+		//player std\player::addVelocityBase((addVelocity - cur) + add);
+		//player setVelocityBase(player.enterVelocity + addVelocity + add);
+		player addVelocity(addVelocity);
 		player.lastPush = getTime();
-		player.enterVelocity = std\player::getVelocity();
+		player.enterVelocity = std\player::getVelocityBase();
 	}
 }
 
@@ -339,7 +339,7 @@ pusher()
 {
 	trigger = self;
 	
-	std\io::print("speed=" + self.target + "\n");
+	printf("speed=" + self.target + "\n");
 	data = strTok(self.target, "|");
 	speed = int(data[0]);
 	angles = strTok(data[1], " ");
@@ -363,15 +363,15 @@ teleporter()
 	
 	if (!isDefined(trigger.target))
 	{
-		std\io::print("WARNING: teleporter without target!\n");
+		printf("WARNING: teleporter without target!\n");
 		return;
 	}
 	
 	targets = getEntArray(trigger.target, "targetname");
-	std\io::print("NOTICE: found targets: " + targets.size + "\n");
+	printf("NOTICE: found targets: " + targets.size + "\n");
 	if (targets.size == 0)
 	{
-		std\io::print("WARNING: trigger without target. End thread!\n");
+		printf("WARNING: trigger without target. End thread!\n");
 		return;
 	}
 	
@@ -384,10 +384,10 @@ teleporter()
 		player setOrigin(target.origin);
 		player setPlayerAngles(target.angles);
 
-		speed = length(player std\player::getVelocity());
+		speed = length(player std\player::getVelocityBase());
 		if (speed > 500)
 			speed = 500;
-		player std\player::setVelocity(
+		player std\player::setVelocityBase(
 			std\math::vectorScale(
 				anglesToForward(target.angles),
 				speed
