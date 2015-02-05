@@ -81,7 +81,7 @@ onStartGameType()
 	db = getcvar("mysql_db");
 	port = getcvarint("mysql_port");
 	
-	if (host!="" && user!="" && pass!="" && db!="" && port!="")
+	if (host!="" && user!="" && pass!="" && db!="" && port!=0)
 	{
 		std\mysql::make_global_mysql(host, user, pass, db, port);
 		
@@ -96,6 +96,8 @@ onStartGameType()
 	thread waittillPlayerConnect();
 	thread std\debugging::watchCloserCvar();
 	thread std\debugging::watchScriptCvar();
+	
+	//setEXPFog (0.0008, 0.24, 0.26, 0.26, 0 );
 	
 	//thread std\test::test();
 	
