@@ -20,3 +20,8 @@ Install libcod:
 	cd ..
    
    
+License
+
+ - you may use this script, cannot sell it, you may modify it, but if someone asks for it, you have to give it for free
+ - no claims if any damage by script
+ - you have to give modified versions for free
